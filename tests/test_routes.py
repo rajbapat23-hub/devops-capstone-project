@@ -123,4 +123,46 @@ class TestAccountService(TestCase):
         )
         self.assertEqual(response.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
-    # ADD YOUR TEST CASES HERE ...
+    def test_read_an_account(self):
+        """It should Read a single Account"""
+        # 1. Use the helper to create a new account and get it back
+        account = self._create_accounts(1)[0]
+        
+        # 2. Make a self.client.get() call to /accounts/{id}
+        resp = self.client.get(
+            f"{BASE_URL}/{account.id}", 
+            content_type="application/json"
+        )
+        
+        # 3. Assert that the return code was HTTP_200_OK
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        
+        # 4. Check the json returned and assert it matches the original data
+        data = resp.get_json()
+        self.assertEqual(data["name"], account.name)
+        self.assertEqual(data["id"], account.id)
+    
+    def test_get_account_not_found(self):
+        """It should not Read an Account that is not found"""
+        # 1. Send a self.client.get() request to the BASE_URL with an invalid account number (0)
+        resp = self.client.get(f"{BASE_URL}/0")
+
+        # 2. Assert that the resp.status_code is status.HTTP_404_NOT_FOUND
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+    
+    def test_get_account_not_found(self):
+        """It should not Read an Account that is not found"""
+        resp = self.client.get(f"{BASE_URL}/0")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_method_not_allowed(self):
+        """It should not allow Method Not Allowed error"""
+        # Sending a DELETE request to the collection (BASE_URL) 
+        # which only supports GET and POST
+        resp = self.client.delete(BASE_URL)
+        self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    def test_create_account_no_content_type(self):
+        """It should not Create an Account without a Content-Type"""
+        response = self.client.post(BASE_URL, data="bad data")
+        self.assertEqual(response.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
