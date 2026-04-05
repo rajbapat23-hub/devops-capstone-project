@@ -208,3 +208,14 @@ class TestAccountService(TestCase):
         # Sending a PUT to an ID that is definitely not in the DB
         resp = self.client.put(f"{BASE_URL}/0", json={})
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+    
+    def test_delete_account(self):
+        """It should Delete an Account"""
+        # 1. Create an Account using the helper
+        account = self._create_accounts(1)[0]
+        
+        # 2. Send a DELETE request to the specific account ID
+        resp = self.client.delete(f"{BASE_URL}/{account.id}")
+        
+        # 3. Assert that the return code was HTTP_204_NO_CONTENT
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
