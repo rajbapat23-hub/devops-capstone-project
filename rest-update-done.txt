@@ -1,0 +1,12 @@
+(venv) theia:project$ curl -i -X PUT http://127.0.0.1:5000/accounts/1 \
+> -H "Content-Type: application/json" \
+> -d '{"name":"John Doe","email":"john@doe.com","address":"123 Main St.","phone_number":"555-1111"}'
+HTTP/1.1 200 OK
+Server: gunicorn
+Date: Sun, 05 Apr 2026 06:17:25 GMT
+Connection: close
+Content-Type: application/json
+Content-Length: 128
+
+{"address":"123 Main St.","date_joined":"2026-04-05","email":"john@doe.com","id":1,"name":"John Doe","phone_number":"555-1111"}
+(venv) theia:project$ 
