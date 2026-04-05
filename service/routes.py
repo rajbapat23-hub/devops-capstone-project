@@ -50,9 +50,10 @@ def create_accounts():
     account.deserialize(request.get_json())
     account.create()
     message = account.serialize()
-    # Uncomment once get_accounts has been implemented
-    # location_url = url_for("get_accounts", account_id=account.id, _external=True)
-    location_url = "/"  # Remove once get_accounts has been implemented
+
+    # Success! Now we can use get_accounts for the location header
+    location_url = url_for("get_accounts", account_id=account.id, _external=True)
+
     return make_response(
         jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
     )
@@ -68,7 +69,23 @@ def create_accounts():
 # READ AN ACCOUNT
 ######################################################################
 
-# ... place you code here to READ an account ...
+@app.route("/accounts/<int:account_id>", methods=["GET"])
+def get_accounts(account_id):
+    """
+    Reads an Account
+    This endpoint will read an Account based the account_id that is requested
+    """
+    app.logger.info("Request to read an Account with id: %s", account_id)
+
+    # 1. Use the Account.find() method to find the account
+    account = Account.find(account_id)
+
+    # 2. Abort with a status.HTTP_404_NOT_FOUND if it cannot be found
+    if not account:
+        abort(status.HTTP_404_NOT_FOUND, f"Account with id [{account_id}] could not be found.")
+
+    # 3. Return the serialize() version of the account with a return code of status.HTTP_200_OK
+    return jsonify(account.serialize()), status.HTTP_200_OK
 
 
 ######################################################################
