@@ -1,3 +1,5 @@
-# devops-capstone-project
+# DevOps Capstone Project
 
-A microservice for managing customer accounts with a REST API
+![Build Status](https://github.com/rajbapat23-hub/devops-capstone-project/actions/workflows/ci-build.yaml/badge.svg)
+
+This repository contains a microservice for managing customer accounts with a REST API
