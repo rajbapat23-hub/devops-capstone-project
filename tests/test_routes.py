@@ -130,29 +130,18 @@ class TestAccountService(TestCase):
         """It should Read a single Account"""
         # 1. Use the helper to create a new account and get it back
         account = self._create_accounts(1)[0]
-        
         # 2. Make a self.client.get() call to /accounts/{id}
         resp = self.client.get(
-            f"{BASE_URL}/{account.id}", 
+            f"{BASE_URL}/{account.id}",
             content_type="application/json"
         )
-        
         # 3. Assert that the return code was HTTP_200_OK
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        
         # 4. Check the json returned and assert it matches the original data
         data = resp.get_json()
         self.assertEqual(data["name"], account.name)
         self.assertEqual(data["id"], account.id)
-    
-    def test_get_account_not_found(self):
-        """It should not Read an Account that is not found"""
-        # 1. Send a self.client.get() request to the BASE_URL with an invalid account number (0)
-        resp = self.client.get(f"{BASE_URL}/0")
 
-        # 2. Assert that the resp.status_code is status.HTTP_404_NOT_FOUND
-        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
-    
     def test_get_account_not_found(self):
         """It should not Read an Account that is not found"""
         resp = self.client.get(f"{BASE_URL}/0")
@@ -160,7 +149,7 @@ class TestAccountService(TestCase):
 
     def test_method_not_allowed(self):
         """It should not allow Method Not Allowed error"""
-        # Sending a DELETE request to the collection (BASE_URL) 
+        # Sending a DELETE request to the collection (BASE_URL)
         # which only supports GET and POST
         resp = self.client.delete(BASE_URL)
         self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
@@ -169,7 +158,7 @@ class TestAccountService(TestCase):
         """It should not Create an Account without a Content-Type"""
         response = self.client.post(BASE_URL, data="bad data")
         self.assertEqual(response.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
-    
+
     def test_get_account_list(self):
         """It should Get a list of Accounts"""
         self._create_accounts(5)
@@ -180,13 +169,13 @@ class TestAccountService(TestCase):
 
     def test_get_account_list_empty(self):
         """It should return an empty list when no accounts exist"""
-        # The setUp() method already deletes all accounts, 
+        # The setUp() method already deletes all accounts,
         # so we just call GET immediately.
         resp = self.client.get(BASE_URL)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
         self.assertEqual(len(data), 0)
-    
+
     def test_update_account(self):
         """It should Update an existing Account"""
         # 1. Create an Account to update
@@ -197,11 +186,11 @@ class TestAccountService(TestCase):
         # 2. Update the account data
         new_account = resp.get_json()
         new_account["name"] = "Something Known"
-        
+
         # 3. Send a PUT request to the specific account ID
         resp = self.client.put(f"{BASE_URL}/{new_account['id']}", json=new_account)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
-        
+
         # 4. Verify the name was actually updated
         updated_account = resp.get_json()
         self.assertEqual(updated_account["name"], "Something Known")
@@ -211,18 +200,18 @@ class TestAccountService(TestCase):
         # Sending a PUT to an ID that is definitely not in the DB
         resp = self.client.put(f"{BASE_URL}/0", json={})
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
-    
+
     def test_delete_account(self):
         """It should Delete an Account"""
         # 1. Create an Account using the helper
         account = self._create_accounts(1)[0]
-        
+
         # 2. Send a DELETE request to the specific account ID
         resp = self.client.delete(f"{BASE_URL}/{account.id}")
-        
+
         # 3. Assert that the return code was HTTP_204_NO_CONTENT
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
-    
+
     def test_security_headers(self):
         """It should return security headers"""
         response = self.client.get('/', environ_overrides=HTTPS_ENVIRON)
@@ -235,45 +224,28 @@ class TestAccountService(TestCase):
         }
         for key, value in headers.items():
             self.assertEqual(response.headers.get(key), value)
-    
-    def test_cors_security(self):
-        """It should return a CORS header"""
-        response = self.client.get('/', environ_overrides=HTTPS_ENVIRON)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # Check for the existence of the CORS header
-        self.assertEqual(response.headers.get('Access-Control-Allow-Origin'), '*')
-    
-    def test_update_account_invalid_content_type(self):
-        """It should not Update an account with invalid content type"""
-        account = self._create_accounts(1)[0]
-        resp = self.client.put(
-            f"{BASE_URL}/{account.id}", 
-            data="not json", 
-            content_type="text/plain"
-        )
-        self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
-    
+
     def test_index_with_no_https(self):
         """It should still reach the home page even without HTTPS"""
         # Note we are NOT passing the HTTPS_ENVIRON here
         response = self.client.get('/')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-    
+
     def test_update_account_invalid_content_type(self):
         """It should not Update an account with invalid content type"""
         # Create an account to update
         account = self._create_accounts(1)[0]
-        
-        # We send a string instead of using the json= parameter 
+
+        # We send a string instead of using the json= parameter
         # to ensure the test client doesn't "fix" the header for us.
         resp = self.client.put(
-            f"{BASE_URL}/{account.id}", 
-            data='{"name": "New Name"}', 
-            content_type="text/plain" 
+            f"{BASE_URL}/{account.id}",
+            data='{"name": "New Name"}',
+            content_type="text/plain"
         )
-        
+
         self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
-    
+
     def test_cors_security(self):
         """It should return a CORS header"""
         response = self.client.get('/', environ_overrides=HTTPS_ENVIRON)

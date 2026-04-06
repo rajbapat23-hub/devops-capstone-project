@@ -62,6 +62,7 @@ def create_accounts():
 # LIST ALL ACCOUNTS
 ######################################################################
 
+
 @app.route("/accounts", methods=["GET"])
 def list_accounts():
     """List all Accounts"""
@@ -137,7 +138,7 @@ def delete_accounts(account_id):
 
     # 1. Use the Account.find() method to retrieve the account
     account = Account.find(account_id)
-    
+
     # 2. If the account exists, call the delete() method
     if account:
         account.delete()
