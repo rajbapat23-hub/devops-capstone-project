@@ -107,17 +107,20 @@ def update_accounts(account_id):
     """
     app.logger.info("Request to update an Account with id: %s", account_id)
 
-    # 1. Find the account by ID
+    # 1. CHECK the content type BEFORE calling get_json()
+    check_content_type("application/json")
+
+    # 2. Find the account
     account = Account.find(account_id)
     if not account:
         abort(status.HTTP_404_NOT_FOUND, f"Account with id [{account_id}] could not be found.")
 
-    # 2. Update the account with the new data from the request
-    account.deserialize(request.get_json())
+    # 3. Get the data ONLY after the check passes
+    data = request.get_json()
+    account.deserialize(data)
     account.update()
 
-    # 3. Return the updated account data
-    return account.serialize(), status.HTTP_200_OK
+    return jsonify(account.serialize()), status.HTTP_200_OK
 
 
 ######################################################################

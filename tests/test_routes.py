@@ -12,12 +12,14 @@ from tests.factories import AccountFactory
 from service.common import status  # HTTP Status Codes
 from service.models import db, Account, init_db
 from service.routes import app
+from service import talisman
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql://postgres:postgres@localhost:5432/postgres"
 )
 
 BASE_URL = "/accounts"
+HTTPS_ENVIRON = {'wsgi.url_scheme': 'https'}
 
 
 ######################################################################
@@ -34,6 +36,7 @@ class TestAccountService(TestCase):
         app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
         app.logger.setLevel(logging.CRITICAL)
         init_db(app)
+        talisman.force_https = False
 
     @classmethod
     def tearDownClass(cls):
@@ -219,3 +222,54 @@ class TestAccountService(TestCase):
         
         # 3. Assert that the return code was HTTP_204_NO_CONTENT
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+    
+    def test_security_headers(self):
+        """It should return security headers"""
+        response = self.client.get('/', environ_overrides=HTTPS_ENVIRON)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        headers = {
+            'X-Frame-Options': 'SAMEORIGIN',
+            'X-Content-Type-Options': 'nosniff',
+            'Content-Security-Policy': "default-src 'self'; object-src 'none'",
+            'Referrer-Policy': 'strict-origin-when-cross-origin'
+        }
+        for key, value in headers.items():
+            self.assertEqual(response.headers.get(key), value)
+    
+    def test_cors_security(self):
+        """It should return a CORS header"""
+        response = self.client.get('/', environ_overrides=HTTPS_ENVIRON)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        # Check for the existence of the CORS header
+        self.assertEqual(response.headers.get('Access-Control-Allow-Origin'), '*')
+    
+    def test_update_account_invalid_content_type(self):
+        """It should not Update an account with invalid content type"""
+        account = self._create_accounts(1)[0]
+        resp = self.client.put(
+            f"{BASE_URL}/{account.id}", 
+            data="not json", 
+            content_type="text/plain"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+    
+    def test_index_with_no_https(self):
+        """It should still reach the home page even without HTTPS"""
+        # Note we are NOT passing the HTTPS_ENVIRON here
+        response = self.client.get('/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+    
+    def test_update_account_invalid_content_type(self):
+        """It should not Update an account with invalid content type"""
+        # Create an account to update
+        account = self._create_accounts(1)[0]
+        
+        # We send a string instead of using the json= parameter 
+        # to ensure the test client doesn't "fix" the header for us.
+        resp = self.client.put(
+            f"{BASE_URL}/{account.id}", 
+            data='{"name": "New Name"}', 
+            content_type="text/plain" 
+        )
+        
+        self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
