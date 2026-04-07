@@ -1,0 +1,6 @@
+(venv) theia:devops-capstone-project$ docker image ls
+REPOSITORY                              TAG       IMAGE ID       CREATED          SIZE
+us.icr.io/sn-labs-rajbapat23/accounts   1         ddfcd7ad8947   39 minutes ago   204MB
+accounts                                latest    ddfcd7ad8947   39 minutes ago   204MB
+postgres                                alpine    bb46dc8bfad7   18 months ago    248MB
+(venv) theia:devops-capstone-project$
